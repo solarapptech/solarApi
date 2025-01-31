@@ -109,6 +109,7 @@ function validateToken (req, res, next) {
     }
 }
 
+router.get('/api', validateToken, (req, res) => { 
 
   const urls = [
     //bcv dolar
@@ -121,7 +122,6 @@ function validateToken (req, res, next) {
     'https://solartech.onrender.com/info6'
   ];
 
-<<<<<<< HEAD
   const dataArray = [];
   const dataNumber = [];
 
@@ -137,55 +137,6 @@ function validateToken (req, res, next) {
 
       // Data a Enviar
       let valores = (
-=======
-let tasabcv = 0;
-let bcvt = 0;
-
-let tasapaypal = 0;
-let payp = 0;
-
-let tasaeuro = 0;
-let euro = 0;
-
-let tasabinance = 0;
-let bncv = 0;
-
-// Data (Paralelo)
-let tasaparalelo = 0;
-let paral = 64.71;
-
-
-// Data (BCV - Dolar)
-childPython2.stdout.on('data', (data) => {
-    tasabcv = `${data}`;
-    bcvt = tasabcv.trim();
-    bcvComplete = true;
-    
-});
-
-
-// Data (BCV - Euro)
-childPython5.stdout.on('data', (data) => {
-    tasaeuro = `${data}`;
-    euro = tasaeuro.trim();
-    euroComplete = true;
-    
-});
-
-
-// Data (PayPal)
-childPython4.stdout.on('data',(data)=>{
-    tasapaypal = `${data}`;
-    payp = tasapaypal.trim();
-    paypComplete = true;
-    
-})
-
-router.get('/api', validateToken, (req, res) => { 
-
-  // Data a Enviar
-  let valores = (
->>>>>>> 626ae75e949342cb8dcff3b3e2b6bbe2c16c1b5f
       {
               "timestamp": venezuelaTime,
               "BCV - Dolar": dataNumber[0],
