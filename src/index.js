@@ -10,6 +10,5 @@ app.use(express.json());
 app.use(express.urlencoded({extended:false}));
 app.use(userRoutes);
 
-
 app.listen(PORT);
 console.log('server on port', PORT);

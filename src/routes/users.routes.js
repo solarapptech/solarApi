@@ -3,8 +3,8 @@ import crypto from 'crypto';
 import {pool} from '../db.js';
 import {createUser, deleteUser, getUser, getUsers, updateUser, } from '../controllers/users.controllers.js';
 const router = Router();
-import { spawn } from 'child_process';
 import moment from 'moment-timezone';
+import { EventSource } from 'eventsource';
 moment.locale('es');  
 let venezuelaTime = moment().tz('America/Caracas').format('YYYY-MM-DD HH:mm');
 
@@ -68,7 +68,8 @@ router.post('/auth', async (req, res) => {
         <head> 
         <title>Bienvenido</title>
         <script>
-        const aUrl = "https://solarapi-vedx.onrender.com";
+        // const aUrl = "https://solarapi-vedx.onrender.com";
+        const aUrl = "http://localhost:3000";
         const redirectionUrl = aUrl + "/" + "api?accessToken=${publicKeyHash}";
         function redirectToUrl(event) {
         event.preventDefault();
@@ -110,96 +111,63 @@ function validateToken (req, res, next) {
 
 router.get('/api', validateToken, (req, res) => { 
 
-const childPython2 = spawn('python', ['./bcvapi.py']);
-const childPython5 = spawn('python', ['./eurapi.py']);
-const childPython4 = spawn('python', ['./ppapi.py']);
+  const urls = [
+    //bcv dolar
+    'https://solartech.onrender.com/info1',
+    //bcv euro
+    'https://solartech.onrender.com/info4',
+    //paralelo
+    'https://solartech.onrender.com/info2',
+    //paypal
+    'https://solartech.onrender.com/info6'
+  ];
 
-let bcvComplete = false;
-let euroComplete = false;
-let paypComplete = false;
+  const dataArray = [];
+  const dataNumber = [];
 
-let tasabcv = 0;
-let bcvt = 0;
+  urls.forEach((url, index) => {
+    const eventSource = new EventSource(url);
+  
+    eventSource.onmessage = function(event) {
+      dataArray[index] = event.data;
+      dataNumber[index] = parseFloat(dataArray[index]);
+      
+      // Check if all data is collected
+      if (dataArray.length === urls.length && !dataArray.includes(undefined)) {
 
-let tasapaypal = 0;
-let payp = 0;
-
-let tasaeuro = 0;
-let euro = 0;
-
-let tasabinance = 0;
-let bncv = 0;
-
-
-// Data (Paralelo)
-let tasaparalelo = 0;
-let paral = 64.71;
-
-
-// Data (BCV - Dolar)
-childPython2.stdout.on('data', (data) => {
-    tasabcv = `${data}`;
-    bcvt = tasabcv.trim();
-    bcvComplete = true;
-    checkComplete();
-});
-
-
-// Data (BCV - Euro)
-childPython5.stdout.on('data', (data) => {
-    tasaeuro = `${data}`;
-    euro = tasaeuro.trim();
-    euroComplete = true;
-    checkComplete();
-});
-
-
-// Data (PayPal)
-childPython4.stdout.on('data',(data)=>{
-    tasapaypal = `${data}`;
-    payp = tasapaypal.trim();
-    paypComplete = true;
-    checkComplete();
-})
-
-
-// Chequeo
-function checkComplete() {
-    if (bcvComplete && euroComplete && paypComplete) {
-        callevnt();
-    }
-}
-
-callevnt();
-
-function callevnt(){
-  // Data a Enviar
-  let valores = (
+      // Data a Enviar
+      let valores = (
       {
-          "timestamp": venezuelaTime,
-          "BCV - Dolar": bcvt,
-          "BCV - Euro": euro,
-          "Paralelo": paral,
-          "PayPal": payp,
+              "timestamp": venezuelaTime,
+              "BCV - Dolar": dataNumber[0],
+              "BCV - Euro": dataNumber[1],
+              "Paralelo": dataNumber[2],
+              "PayPal": dataNumber[3],
+        }
+      );
+      let valoresJSON = JSON.stringify(valores);
+        
+      const encryptDo = crypto.publicEncrypt({
+      key: publick,
+      padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
+      oaepHash: 'sha256'
+      }, Buffer.from(valoresJSON));
+
+      const decryptData = crypto.privateDecrypt({
+        key: privatek,
+        padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
+        oaepHash: 'sha256'
+      },encryptDo);
+
+      res.json({
+          'Tasas': JSON.parse(decryptData.toString())
+      });
       }
-  );
-  let valoresJSON = JSON.stringify(valores);
-    
-  const encryptDo = crypto.publicEncrypt({
-  key: publick,
-  padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
-  oaepHash: 'sha256'
-  }, Buffer.from(valoresJSON));
-
-  const decryptData = crypto.privateDecrypt({
-    key: privatek,
-    padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
-    oaepHash: 'sha256'
-  },encryptDo);
-
-  res.json({
-      'Tasas': JSON.parse(decryptData.toString())
+    }
+    eventSource.onerror = function(err) {
+      console.error(`Error fetching data from ${url}:`, err);
+    };
   });
-}});
+});
 
 export default router
