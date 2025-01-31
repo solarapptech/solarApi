@@ -68,7 +68,8 @@ router.post('/auth', async (req, res) => {
         <head> 
         <title>Bienvenido</title>
         <script>
-        const aUrl = "https://solarapi-vedx.onrender.com";
+        // const aUrl = "https://solarapi-vedx.onrender.com";
+        const aUrl = "http://localhost:3000";
         const redirectionUrl = aUrl + "/" + "api?accessToken=${publicKeyHash}";
         function redirectToUrl(event) {
         event.preventDefault();
@@ -108,15 +109,10 @@ function validateToken (req, res, next) {
     }
 }
 
-router.get('/api', validateToken, (req, res) => { 
 
 const childPython2 = spawn('python', ['./bcvapi.py']);
 const childPython5 = spawn('python', ['./eurapi.py']);
 const childPython4 = spawn('python', ['./ppapi.py']);
-
-let bcvComplete = false;
-let euroComplete = false;
-let paypComplete = false;
 
 let tasabcv = 0;
 let bcvt = 0;
@@ -130,7 +126,6 @@ let euro = 0;
 let tasabinance = 0;
 let bncv = 0;
 
-
 // Data (Paralelo)
 let tasaparalelo = 0;
 let paral = 64.71;
@@ -141,7 +136,7 @@ childPython2.stdout.on('data', (data) => {
     tasabcv = `${data}`;
     bcvt = tasabcv.trim();
     bcvComplete = true;
-    checkComplete();
+    
 });
 
 
@@ -150,7 +145,7 @@ childPython5.stdout.on('data', (data) => {
     tasaeuro = `${data}`;
     euro = tasaeuro.trim();
     euroComplete = true;
-    checkComplete();
+    
 });
 
 
@@ -159,20 +154,11 @@ childPython4.stdout.on('data',(data)=>{
     tasapaypal = `${data}`;
     payp = tasapaypal.trim();
     paypComplete = true;
-    checkComplete();
+    
 })
 
+router.get('/api', validateToken, (req, res) => { 
 
-// Chequeo
-function checkComplete() {
-    if (bcvComplete && euroComplete && paypComplete) {
-        callevnt();
-    }
-}
-
-// callevnt();
-
-function callevnt(){
   // Data a Enviar
   let valores = (
       {
@@ -200,6 +186,6 @@ function callevnt(){
   res.json({
       'Tasas': JSON.parse(decryptData.toString())
   });
-}});
+});
 
 export default router
