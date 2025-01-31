@@ -163,9 +163,6 @@ router.get('/api', validateToken, (req, res) => {
       });
       }
     }
-    eventSource.onerror = function(err) {
-      console.error(`Error fetching data from ${url}:`, err);
-    };
   });
 });
 
