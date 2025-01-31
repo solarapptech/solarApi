@@ -68,7 +68,7 @@ router.post('/auth', async (req, res) => {
         <head> 
         <title>Bienvenido</title>
         <script>
-        const redirectionUrl = "http://localhost:3000/api?accessToken=${publicKeyHash}";
+        const redirectionUrl = "https://solarapi-vedx.onrender.com/api?accessToken=${publicKeyHash}";
         function redirectToUrl(event) {
         event.preventDefault();
         window.location.href = redirectionUrl;
